@@ -37,7 +37,7 @@ app.get('/todos', (req, res) => {
 // GET /todos/12345
 app.get('/todos/:id', (req, res) => {
     var id = req.params.id;
-    console.log(id);
+    // console.log(id);
 
     if (!ObjectID.isValid(id)) {
         console.log("Status 404");
