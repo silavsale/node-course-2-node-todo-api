@@ -171,8 +171,6 @@ describe('PATCH /todos/:id', () => {
             })
             .end(done);
     });
-
-
 });
 
 
@@ -223,7 +221,7 @@ describe('POST /users', () => {
                     expect(user).toBeTruthy();
                     expect(user.password).not.toBe(password);
                     done();
-                });
+                }).catch((e) => done(e));
             });
     });
 
@@ -248,5 +246,70 @@ describe('POST /users', () => {
             .expect(400)
             .end(done);
     });
+});
 
+describe('POST /users/login', () => {
+    it('should login user and return auth token', (done) => {
+        request(app)
+            .post('/users/login')
+            .send({
+                email: users[1].email,
+                password: users[1].password
+            })
+            .expect(200)
+            .expect((res) => {
+                expect(res.headers['x-auth']).toBeTruthy();
+            })
+            .end((err, res) => {
+                if (err) {
+                    return done(err);
+                }
+
+                User.findById(users[1]._id).then((user) => {
+                    //For anyone who used .toInclude to check if an object contains certain fields, the new version is .toMatchObject.
+                    expect(user.tokens[0]).toMatchObject({
+                        access: 'auth',
+                        token: res.headers['x-auth']
+                    });
+                    done();
+                }).catch((e) => done(e));
+            })
+    });
+
+    it('should reject invalid login', (done) => {
+        request(app)
+            .post('/users/login')
+            .send({
+                email: users[1].email,
+                password: users[1].password + "aa"
+            })
+            .expect(400)
+            .expect((res) => {
+                // toNotExist deprecated, use toBeFalsy
+                expect(res.headers['x-auth']).toBeFalsy();
+            })
+            .end((err, res) => {
+                if (err) {
+                    return done(err);
+                }
+                User.findById(users[1]._id).then((user) => {
+                    //For anyone who used .toInclude to check if an object contains certain fields, the new version is .toMatchObject.
+                    expect(user.tokens.length).toBe(0);
+
+                    done();
+                }).catch((e) => done(e));
+
+                // going to pass
+                // in an invalid password and then you're going to tweak all of your assertions.
+                // The 200 should be a 400.
+                // You should expect the X auth token to not exist.
+                //     And down below you should expect that the user tokens array has a length equal to zero because no token
+                // should have been created and it didn't have any to start with.
+                // So the length should still be 0.
+                // Take a moment to knock this out.
+                //     You can actually copy the contents of the test case up above.
+                //     Paste it into the test case down below tweak it then rerun the test suite make sure everything passes
+                // and if it does you're good to go.
+            });
+    });
 });
