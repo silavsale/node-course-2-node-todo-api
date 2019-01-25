@@ -298,18 +298,25 @@ describe('POST /users/login', () => {
 
                     done();
                 }).catch((e) => done(e));
+            });
+    });
+});
 
-                // going to pass
-                // in an invalid password and then you're going to tweak all of your assertions.
-                // The 200 should be a 400.
-                // You should expect the X auth token to not exist.
-                //     And down below you should expect that the user tokens array has a length equal to zero because no token
-                // should have been created and it didn't have any to start with.
-                // So the length should still be 0.
-                // Take a moment to knock this out.
-                //     You can actually copy the contents of the test case up above.
-                //     Paste it into the test case down below tweak it then rerun the test suite make sure everything passes
-                // and if it does you're good to go.
+describe('DELETE /users/signout', () => {
+    it('should remove auth token on logout', (done) => {
+        request(app)
+            .delete('/users/signout')
+            .set('x-auth', users[0].tokens[0].token)
+            .expect(200)
+            .end((err, res) => {
+                if (err) {
+                    return done(err);
+                }
+
+                User.findById(users[0]._id).then((user) => {
+                    expect(user.tokens.length).toBe(0);
+                    done();
+                }).catch((e) => done(e));
             });
     });
 });
